@@ -1,0 +1,2015 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FF Pro Tournament</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <style>
+        body {
+            font-family: 'Hind Siliguri', sans-serif;
+            background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+            color: #333333;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        @keyframes marquee {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        .animate-marquee {
+            display: inline-block;
+            white-space: nowrap;
+            animation: marquee 20s linear infinite;
+        }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        .zoom-in { animation: zoomIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes zoomIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .page { display: none; }
+        .page.active { display: block; }
+        .rainbow-gradient {
+            background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3, #54a0ff, #5f27cd);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .sunshine-gradient {
+            background: linear-gradient(135deg, #ffd93d 0%, #ff9a3d 50%, #ff6b6b 100%);
+        }
+        .ocean-gradient {
+            background: linear-gradient(135deg, #48dbfb 0%, #54a0ff 50%, #5f27cd 100%);
+        }
+        .spring-gradient {
+            background: linear-gradient(135deg, #6c5ce7 0%, #00cec9 50%, #55efc4 100%);
+        }
+        .vibrant-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        .colorful-text {
+            background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .solo-bg {
+            background: linear-gradient(135deg, #48dbfb 0%, #54a0ff 100%);
+        }
+        .duo-bg {
+            background: linear-gradient(135deg, #ff9a3d 0%, #ff6b6b 100%);
+        }
+        .squad-bg {
+            background: linear-gradient(135deg, #6c5ce7 0%, #00cec9 100%);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Container -->
+    <div id="nav" class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t-2 border-orange-100 flex justify-around py-4 z-50 rounded-t-[40px] shadow-[0_-10px_30px_rgba(255,107,107,0.15)]">
+        <button onclick="showPage('home')" class="nav-btn flex flex-col items-center gap-1 group w-16">
+            <span class="text-2xl group-active:scale-75 transition-transform duration-200">🏠</span>
+            <span class="text-[11px] font-bold text-gray-700 group-hover:rainbow-gradient group-hover:bg-clip-text group-hover:text-transparent transition-all">Home</span>
+        </button>
+        
+        <button onclick="showPage('mymatches')" class="nav-btn flex flex-col items-center gap-1 group w-16">
+            <span class="text-2xl group-active:scale-75 transition-transform duration-200">🎮</span>
+            <span class="text-[11px] font-bold text-gray-700 group-hover:rainbow-gradient group-hover:bg-clip-text group-hover:text-transparent transition-all">My Match</span>
+        </button>
+
+        <button onclick="showPage('wallet')" class="nav-btn flex flex-col items-center gap-1 group w-16">
+            <span class="text-2xl group-active:scale-75 transition-transform duration-200">💰</span>
+            <span class="text-[11px] font-bold text-gray-700 group-hover:rainbow-gradient group-hover:bg-clip-text group-hover:text-transparent transition-all">Wallet</span>
+        </button>
+        
+        <button onclick="showPage('admin')" id="adminNav" style="display: none;" class="nav-btn flex flex-col items-center gap-1 group w-16">
+            <span class="text-2xl group-active:scale-75 transition-transform duration-200">🛠️</span>
+            <span class="text-[11px] font-bold text-gray-700 group-hover:rainbow-gradient group-hover:bg-clip-text group-hover:text-transparent transition-all">Admin</span>
+        </button>
+        
+        <button onclick="showPage('profile')" class="nav-btn flex flex-col items-center gap-1 group w-16">
+            <span class="text-2xl group-active:scale-75 transition-transform duration-200">👤</span>
+            <span class="text-[11px] font-bold text-gray-700 group-hover:rainbow-gradient group-hover:bg-clip-text group-hover:text-transparent transition-all">Profile</span>
+        </button>
+    </div>
+
+
+    <!-- Header Container -->
+    <div id="header"></div>
+
+    <!-- Marquee Container -->
+    <div id="marquee"></div>
+
+    <!-- Main Content Container -->
+    <div id="content" class="min-h-screen pb-28 selection:bg-orange-400/30">
+        <!-- Loading Screen -->
+        <div id="loading" class="fixed inset-0 sunshine-gradient flex items-center justify-center z-50">
+            <div class="text-center">
+                <div class="rainbow-gradient w-24 h-24 rounded-3xl flex items-center justify-center font-black text-white shadow-2xl text-4xl mb-6 animate-pulse">FF</div>
+                <p class="text-lg text-white font-bold uppercase tracking-widest">লোড হচ্ছে...</p>
+            </div>
+        </div>
+
+        <!-- Pages -->
+        <div id="home" class="page p-5 max-w-md mx-auto fade-in"></div>
+        <div id="mymatches" class="page p-5 max-w-md mx-auto fade-in"></div>
+        <div id="match" class="page p-5 max-w-md mx-auto fade-in"></div>
+        <div id="rules" class="page p-5 max-w-md mx-auto fade-in"></div>
+        <div id="wallet" class="page p-5 max-w-md mx-auto fade-in"></div>
+        <div id="profile" class="page p-5 max-w-md mx-auto fade-in"></div>
+        <div id="login" class="page p-5 max-w-md mx-auto fade-in"></div>
+        <div id="admin" class="page p-5 max-w-md mx-auto fade-in"></div>
+        <div id="contact" class="page p-5 max-w-md mx-auto fade-in"></div>
+    </div>
+
+    <!-- Modal Container -->
+    <div id="modal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50 p-5">
+        <div class="vibrant-card p-8 rounded-[40px] max-w-md w-full border-2 border-orange-200">
+            <div id="modalContent"></div>
+            <button onclick="hideModal()" class="w-full mt-6 sunshine-gradient py-5 rounded-3xl text-lg font-bold text-white shadow-lg active:scale-95 transition-transform">ঠিক আছে</button>
+        </div>
+    </div>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDQcNfcQOkH6rfr4z_vgdG6yUYJJ0SDqKw",
+            authDomain: "rdsapp-910f3.firebaseapp.com",
+            databaseURL: "https://rdsapp-910f3-default-rtdb.firebaseio.com",
+            projectId: "rdsapp-910f3",
+            storageBucket: "rdsapp-910f3.firebasestorage.app",
+            messagingSenderId: "193789962907",
+            appId: "1:193789962907:web:60dae855eed6d454bef43e"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // Application State
+        let state = {
+            currentUser: JSON.parse(localStorage.getItem('ff_user') || 'null'),
+            users: [],
+            tournaments: [],
+            payments: [],
+            settings: {
+                adminBkash: '017XXXXXXXX',
+                adminNagad: '018XXXXXXXX',
+                marqueeNotice: '🎮 FF Pro Tournament এ আপনাকে স্বাগতম! 🏆',
+                minDeposit: 100,
+                minWithdraw: 200
+            },
+            messages: [],
+            filterCategory: 'ALL'
+        };
+let countdownInterval = null; // গ্লোবাল টাইমার ভেরিয়েবল
+
+        // Helper Functions
+        function formatTime(ts) {
+            return new Date(ts).toLocaleString('bn-BD', {
+                day: 'numeric',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+        }
+
+        function getStatus(startTime) {
+            const now = Date.now();
+            const tenMinBefore = startTime - (10 * 60 * 1000);
+            const matchEndTime = startTime + (45 * 60 * 1000);
+            if (now < tenMinBefore) return { label: 'Upcoming', color: 'text-blue-500', isLive: false };
+            if (now >= tenMinBefore && now < matchEndTime) return { label: 'Live 🔴', color: 'text-red-600 animate-pulse', isLive: true };
+            return { label: 'End', color: 'text-gray-500', isLive: false };
+        }
+
+        function showModal(content) {
+            document.getElementById('modalContent').innerHTML = content;
+            document.getElementById('modal').classList.remove('hidden');
+            document.getElementById('modal').classList.add('flex');
+        }
+
+        function hideModal() {
+            document.getElementById('modal').classList.add('hidden');
+            document.getElementById('modal').classList.remove('flex');
+        }
+
+        function showAlert(msg) {
+            showModal(`<p class="text-center text-lg font-bold colorful-text leading-relaxed">${msg}</p>`);
+        }
+
+        function showPage(pageName) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageName).classList.add('active');
+            renderPage(pageName);
+        }
+
+        function renderHeader() {
+            const user = state.currentUser;
+            const headerHTML = `
+                <header class="vibrant-card p-5 border-b-2 border-orange-100 flex justify-between items-center sticky top-0 z-50">
+                    <div onclick="showPage('home')" class="flex items-center gap-3 cursor-pointer active:scale-95 transition-transform">
+                        <div class="rainbow-gradient w-12 h-12 rounded-2xl flex items-center justify-center font-black text-white shadow-xl text-2xl">FF</div>
+                        <span class="font-bold text-2xl tracking-tight colorful-text">PRO ARENA</span>
+                    </div>
+                    ${user ? `
+                        <div class="flex items-center gap-4">
+                            <div class="text-right">
+                                <p class="text-[14px] text-gray-600 font-bold">Balance</p>
+                                <p class="text-xl font-bold text-orange-600">৳${Number(user.balance).toFixed(0)}</p>
+                            </div>
+                            <div onclick="showPage('profile')" class="w-14 h-14 rounded-full ocean-gradient flex items-center justify-center cursor-pointer shadow-lg border-2 border-white text-2xl">👤</div>
+                        </div>
+                    ` : `
+                        <button onclick="showPage('login')" class="sunshine-gradient px-8 py-4 rounded-3xl text-base font-bold text-white shadow-xl active:scale-95">লগইন</button>
+                    `}
+                </header>
+            `;
+            document.getElementById('header').innerHTML = headerHTML;
+            
+            // Show/hide admin nav
+            document.getElementById('adminNav').style.display = user?.role === 'ADMIN' ? 'flex' : 'none';
+        }
+
+        function renderMarquee() {
+            const notice = state.settings.marqueeNotice;
+            document.getElementById('marquee').innerHTML = `
+                <div class="rainbow-gradient py-3 overflow-hidden shadow-lg">
+                    <div class="animate-marquee whitespace-nowrap text-[15px] font-bold text-white uppercase tracking-[0.2em]">
+                        ${notice} ✨ 
+                    </div>
+                </div>
+            `;
+        }
+
+               function renderPage(pageName) {
+    switch(pageName) {
+        case 'home': renderHome(); break;
+        case 'mymatches': renderMyMatches(); break;
+        case 'wallet': renderWallet(); break;
+        case 'profile': renderProfile(); break;
+        case 'login': renderLogin(); break;
+        case 'admin': renderAdmin(); break;
+        case 'contact': renderContact(); break;
+        case 'rules': renderRules(); break; // এটি নতুন যোগ করুন ✅
+    }
+}
+
+
+        // নতুন কপি ফাংশন
+        function copyText(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                // ছোট টোস্ট মেসেজ বা এলার্ট
+                const toast = document.createElement('div');
+                toast.className = 'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black/80 text-white px-6 py-3 rounded-full z-[60] font-bold fade-in';
+                toast.innerText = 'কপি হয়েছে! ✅';
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 1500);
+            }).catch(err => {
+                showAlert('কপি করা যায়নি ❌');
+            });
+        }
+
+                function renderHome() {
+            let filteredTournaments = state.tournaments.slice().sort((a, b) => b.startTime - a.startTime);
+            
+            if (state.filterCategory !== 'ALL') {
+                filteredTournaments = filteredTournaments.filter(t => t.category === state.filterCategory);
+            }
+            
+            filteredTournaments = filteredTournaments.filter(t => {
+                const status = getStatus(t.startTime);
+                return status.label !== 'End';
+            });
+
+            const tournamentsHTML = filteredTournaments.map(t => {
+                const status = getStatus(t.startTime);
+                const categoryColor = t.category === 'SOLO' ? 'solo-bg' : t.category === 'DUO' ? 'duo-bg' : 'squad-bg';
+                const categoryText = t.category === 'SOLO' ? 'SOLO' : t.category === 'DUO' ? 'DUO' : 'SQUAD';
+                const user = state.currentUser;
+                const isJoined = t.players?.some(p => p.userId === user?.id);
+                
+                // Count Calculation
+                const currentTotalPlayers = (t.players || []).reduce((sum, p) => sum + (p.names ? p.names.length : 0), 0);
+                const maxPlayers = t.maxPlayers || 48;
+                const isFull = currentTotalPlayers >= maxPlayers;
+
+                return `
+                    <div onclick="showMatchDetails('${t.id}')" class="vibrant-card p-7 rounded-[40px] hover:border-orange-300 transition-all cursor-pointer hover:scale-[1.02] duration-300 hover:shadow-xl relative overflow-hidden">
+                        ${isFull ? '<div class="absolute top-0 right-0 bg-red-600 text-white text-[10px] font-bold px-6 py-1 transform rotate-45 translate-x-4 translate-y-3 shadow-lg z-10">FULL</div>' : ''}
+                        
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-[14px] font-bold uppercase tracking-widest ${status.color}">${status.label}</span>
+                  <span class="text-[12px] text-gray-600 font-bold bg-orange-50 px-4 py-2 rounded-full whitespace-nowrap">${formatTime(t.startTime)}</span>  
+                            <span class="text-[12px] font-bold text-white px-4 py-1.5 rounded-full ${categoryColor}">${categoryText}</span>
+                        </div>
+                        <div class="flex justify-between items-center mb-4">
+                            <h6 class="font-bold text-xl text-gray-800 truncate pr-2">${t.title}</h>
+                             </div>
+                        
+                        <div class="mb-4">
+                            <div class="flex justify-between text-[11px] font-bold text-gray-500 mb-1 uppercase tracking-wider">
+                                <span>Players Joined</span>
+                                <span class="${isFull ? 'text-red-500' : 'text-orange-500'}">${currentTotalPlayers}/${maxPlayers}</span>
+                            </div>
+                            <div class="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                                <div class="h-2.5 rounded-full ${isFull ? 'bg-red-500' : 'bg-orange-400'} transition-all duration-1000" style="width: ${(currentTotalPlayers/maxPlayers)*100}%"></div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-4 mt-4">
+                            <div class="bg-gradient-to-br from-orange-50 to-yellow-50 p-4 rounded-3xl border-2 border-orange-100 text-center">
+                                <p class="text-[12px] text-orange-600 uppercase font-bold mb-2">Entry Fee</p>
+                                <p class="text-lg font-bold text-gray-800">৳${t.entryFee}</p>
+                            </div>
+                            <div class="bg-gradient-to-br from-blue-50 to-cyan-50 p-4 rounded-3xl border-2 border-blue-100 text-center">
+                                <p class="text-[12px] text-blue-600 uppercase font-bold mb-2">Per Kill</p>
+                                <p class="text-lg font-bold text-gray-800">৳${t.perKill}</p>
+                            </div>
+                            <div class="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-3xl border-2 border-purple-100 text-center">
+                                <p class="text-[12px] text-purple-600 uppercase font-bold mb-2">1st Prize</p>
+                                <p class="text-lg font-bold text-gray-800">৳${t.prizes?.first}</p>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <span class="text-gray-600 text-[12px] font-bold">Total Teams/Entries:</span>
+                                <span class="text-orange-600 text-[14px] font-bold">${t.players?.length || 0}</span>
+                            </div>
+                            ${isJoined ? `
+                                <span class="text-[13px] font-bold text-green-600 uppercase bg-green-100 px-4 py-2 rounded-full border-2 border-green-200">
+                                    Room details ✓
+                                </span>
+                            ` : isFull ? `
+                                <span class="text-[13px] font-bold text-red-500 uppercase bg-red-50 px-4 py-2 rounded-full border-2 border-red-100">
+                                    Full 🚫
+                                </span>
+                            ` : `
+                                <button onclick="showMatchDetails('${t.id}'); event.stopPropagation();" 
+                                        class="text-[13px] font-bold text-white px-4 py-2 rounded-xl ${categoryColor}">
+                                    Join Now
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('home').innerHTML = `
+                <div class="space-y-7">
+                    <div class="sunshine-gradient p-10 rounded-[48px] shadow-2xl relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-48 h-48 bg-white/30 rounded-full -mr-24 -mt-24 blur-3xl"></div>
+                        <h2 class="text-3xl font-bold text-white leading-tight mb-4">সেরা টুর্নামেন্ট <br/> খেলুন প্রতিদিন! 🏆</h2>
+                        <p class="text-[16px] text-white/90 font-bold uppercase tracking-widest">জয়েন করুন এবং জিতে নিন নিশ্চিত পুরস্কার!!! 💰</p>
+                    </div>
+                
+
+<div class="grid grid-cols-2 gap-4 mb-6">
+    <button onclick="showPage('rules')" class="bg-white p-4 rounded-[24px] shadow-lg flex items-center justify-center gap-2 border border-gray-100 active:scale-95 transition-transform">
+        <span class="text-xl">📜</span>
+        <span class="text-[13px] font-bold text-gray-700">Game Rules</span>
+    </button>
+    <button onclick="window.open('https://youtube.com', '_blank')" class="bg-white p-4 rounded-[24px] shadow-lg flex items-center justify-center gap-2 border border-gray-100 active:scale-95 transition-transform">
+        <span class="text-xl">📺</span>
+        <span class="text-[13px] font-bold text-gray-700">Tutorial</span>
+    </button>
+</div>
+
+                    <div class="vibrant-card p-4 rounded-[32px]">
+                        <h3 class="font-bold text-gray-800 text-lg uppercase tracking-widest mb-4 flex items-center gap-3">
+                            <span class="w-3 h-6 rainbow-gradient rounded-full"></span> Match Filter
+                        </h3>
+                        <div class="flex gap-3">
+                            ${['ALL', 'SOLO', 'DUO', 'SQUAD'].map(category => {
+                                const isActive = state.filterCategory === category;
+                                const categoryLabel = category === 'ALL' ? 'ALL' : category;
+                                const categoryColor = category === 'ALL' ? 'rainbow-gradient' : 
+                                                    category === 'SOLO' ? 'solo-bg' : 
+                                                    category === 'DUO' ? 'duo-bg' : 'squad-bg';
+                                return `
+                                    <button onclick="setFilterCategory('${category}')" 
+                                            class="flex-1 py-3 rounded-2xl text-[13px] font-bold transition-all ${isActive ? `${categoryColor} text-white shadow-lg` : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">
+                                        ${categoryLabel}
+                                    </button>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                    
+                    <div class="grid gap-6">
+                        ${tournamentsHTML || '<p class="text-center py-24 opacity-50 text-base italic uppercase font-bold text-gray-500">এই ক্যাটাগরিতে কোনো ম্যাচ নেই</p>'}
+                    </div>
+                </div>
+            `;
+        }
+
+
+        function setFilterCategory(category) {
+            state.filterCategory = category;
+            renderHome();
+        }
+
+           function showMatchDetails(tournamentId) {
+            // আগের টাইমার থাকলে বন্ধ করা
+            if (countdownInterval) clearInterval(countdownInterval);
+
+            const t = state.tournaments.find(x => x.id === tournamentId);
+            if (!t) return showAlert('টুর্নামেন্ট পাওয়া যায়নি!');
+            
+            const status = getStatus(t.startTime);
+            const user = state.currentUser;
+            const isJoined = t.players?.some(p => p.userId === user?.id);
+            
+            // Dynamic Colors
+            const categoryColor = t.category === 'SOLO' ? 'solo-bg' : t.category === 'DUO' ? 'duo-bg' : 'squad-bg';
+            const categoryText = t.category === 'SOLO' ? 'SOLO' : t.category === 'DUO' ? 'DUO' : 'SQUAD';
+            const containerBg = t.category === 'SOLO' ? 'bg-gradient-to-r from-blue-50 to-cyan-50 border-blue-200' : 
+                              t.category === 'DUO' ? 'bg-gradient-to-r from-orange-50 to-yellow-50 border-orange-200' : 
+                              'bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200';
+
+            const userJoinedData = isJoined ? t.players.find(p => p.userId === user?.id) : null;
+            
+            let matchContent = '';
+            
+                        if (isJoined && status.isLive) {
+                matchContent = `
+                    <div class="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-300 p-6 rounded-[40px] text-center space-y-5 mb-7 shadow-lg relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-full h-1 bg-green-400 animate-pulse"></div>
+                        <p class="text-[15px] text-green-600 font-bold uppercase tracking-widest">গেম রুম তথ্য 🔑</p>
+                        
+                        <div class="space-y-4">
+                            <div class="bg-white p-4 rounded-3xl border border-green-200 shadow-sm">
+                                <p class="text-[12px] text-gray-500 font-bold uppercase mb-1">Room ID</p>
+                                <div class="flex items-center justify-center gap-3">
+                                    <span class="text-3xl font-black text-gray-800 tracking-wider">${t.roomId || 'Wait'}</span>
+                                    <button onclick="copyText('${t.roomId}')" class="bg-green-100 text-green-600 p-2 rounded-xl active:scale-90 transition-transform" title="Copy ID">
+                                        📋
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="bg-white p-4 rounded-3xl border border-green-200 shadow-sm">
+                                <p class="text-[12px] text-gray-500 font-bold uppercase mb-1">Password</p>
+                                <div class="flex items-center justify-center gap-3">
+                                    <span class="text-3xl font-black text-gray-800 tracking-wider">${t.password || 'Wait'}</span>
+                                    <button onclick="copyText('${t.password}')" class="bg-green-100 text-green-600 p-2 rounded-xl active:scale-90 transition-transform" title="Copy Password">
+                                        📋
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-[11px] text-gray-500">আইকন (📋) এ ক্লিক করে কপি করুন</p>
+                    </div>
+                `;
+            }
+
+               else if (isJoined) {
+                const modeText = userJoinedData?.mode === 'SOLO' ? 'SOLO' : 
+                                userJoinedData?.mode === 'DUO' ? 'DUO' : 'SQUAD';
+                matchContent = `
+                    <div class="space-y-6 mb-9">
+                        <div class="bg-gradient-to-br from-blue-50 to-cyan-50 p-7 rounded-[40px] text-center text-blue-600 border-2 border-blue-200 mb-7">
+                            <div class="text-[15px] font-bold uppercase tracking-widest mb-3">আপনি জয়েন করেছেন! ✅</div>
+                            <div class="space-y-2">
+                                <p class="text-sm font-bold text-gray-700">মুড: ${modeText}</p>
+                                <p class="text-sm font-bold text-gray-700">খেলোয়াড়: ${userJoinedData?.names?.join(', ')}</p>
+                                <p class="text-sm font-bold text-gray-700">ফি: ৳${userJoinedData?.fee || t.entryFee}</p>
+                            </div>
+                        </div>
+                        <div class="text-center text-gray-600 text-[13px] font-bold">
+                            রুম আইডি ও পাসওয়ার্ড কাউন্টডাউন শেষ হলে এখানে দেখতে পাবেন ⏰
+                        </div>
+                    </div>
+                `;
+            } else if (status.label !== 'End') {
+                let allowedModes = [];
+                if (t.category === 'SOLO') allowedModes = ['SOLO'];
+                else if (t.category === 'DUO') allowedModes = ['SOLO', 'DUO'];
+                else if (t.category === 'SQUAD') allowedModes = ['SOLO', 'DUO', 'SQUAD'];
+                
+                matchContent = `
+                    <div class="space-y-7 mb-9">
+                        <div class="space-y-4">
+                            <label class="text-[15px] text-gray-700 font-bold uppercase tracking-widest ml-2">কিভাবে খেলতে চান? 🎮</label>
+                            <div class="flex gap-2 ${containerBg} p-2 rounded-3xl border-2" id="modeSelector">
+                                ${allowedModes.map(mode => {
+                                    const modeText = mode === 'SOLO' ? 'SOLO' : mode === 'DUO' ? 'DUO' : 'SQUAD';
+                                    const modePlayers = mode === 'SOLO' ? 1 : mode === 'DUO' ? 2 : 4;
+                                    return `
+                                        <button onclick="setMatchMode('${mode}', ${modePlayers}, '${categoryColor}')" 
+                                                class="flex-1 py-4 text-[13px] font-bold rounded-2xl transition-all match-mode-btn text-gray-600 hover:bg-white/50">
+                                            ${modeText} (${modePlayers} জন)
+                                        </button>
+                                    `;
+                                }).join('')}
+                            </div>
+                            <p class="text-[12px] text-gray-500 text-center">
+                                ${t.category === 'SOLO' ? 'SOLO ম্যাচে শুধুমাত্র SOLO মুডে খেলা যায়' : 
+                                  t.category === 'DUO' ? 'DUO ম্যাচে SOLO বা DUO মুডে খেলা যায়' : 
+                                  'SQUAD ম্যাচে যেকোনো মুডে খেলা যায়'}
+                            </p>
+                        </div>
+                        <div class="space-y-5" id="playerNames"></div>
+                        <button onclick="joinTournament('${t.id}', '${t.category}')" class="w-full ${categoryColor} py-7 rounded-[32px] font-bold text-lg uppercase text-white shadow-2xl active:scale-95 transition-transform" id="joinBtn">Join Now (৳${t.entryFee})</button>
+                    </div>
+                `;
+            }
+
+            document.getElementById('match').innerHTML = `
+                <div class="space-y-7 pb-12">
+                    <div class="vibrant-card p-9 rounded-[48px]">
+                        <div class="flex justify-between items-center mb-6">
+                            <div>
+                                <h2 class="font-bold text-2xl text-gray-800">${t.title}</h2>
+                                <div class="flex items-center gap-3 mt-2">
+                                    <span class="text-white text-[13px] font-bold px-4 py-1.5 rounded-full ${categoryColor}">${categoryText} ম্যাচ</span>
+                                    <span class="text-[13px] font-bold uppercase tracking-widest ${status.color}">${status.label}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gradient-to-r from-gray-800 to-gray-900 p-6 rounded-[32px] border-4 border-gray-700 text-center mb-7 shadow-2xl relative overflow-hidden group">
+                            <div class="absolute inset-0 bg-white/5 group-hover:bg-white/10 transition-colors"></div>
+                            <p class="text-[12px] text-gray-400 font-bold uppercase tracking-[0.3em] mb-4 relative z-10">Match Starts In ⏳</p>
+                            
+                            <div id="countdown" class="flex justify-center gap-3 relative z-10">
+                                <div class="bg-white/10 p-3 rounded-2xl w-16 backdrop-blur-sm"><span id="days" class="block text-2xl font-black text-white">00</span><span class="text-[10px] text-gray-400 font-bold">DAYS</span></div>
+                                <div class="bg-white/10 p-3 rounded-2xl w-16 backdrop-blur-sm"><span id="hours" class="block text-2xl font-black text-white">00</span><span class="text-[10px] text-gray-400 font-bold">HRS</span></div>
+                                <div class="bg-white/10 p-3 rounded-2xl w-16 backdrop-blur-sm"><span id="minutes" class="block text-2xl font-black text-white">00</span><span class="text-[10px] text-gray-400 font-bold">MIN</span></div>
+                                <div class="bg-orange-500/20 p-3 rounded-2xl w-16 backdrop-blur-sm border border-orange-500/50"><span id="seconds" class="block text-2xl font-black text-orange-400">00</span><span class="text-[10px] text-orange-400 font-bold">SEC</span></div>
+                            </div>
+                            <div id="liveMsg" class="hidden text-red-500 font-black text-2xl animate-pulse mt-2 uppercase tracking-widest">🔴 Live Now</div>
+                        </div>
+
+                        ${matchContent}
+
+                        <div class="grid grid-cols-3 gap-4 pt-6 border-t-2 border-orange-100">
+                             <div class="bg-gradient-to-br from-red-50 to-pink-50 p-4 rounded-3xl border-2 border-red-100 text-center">
+                                <p class="text-[12px] text-red-600 uppercase font-bold mb-2">1st Prize 🥇</p>
+                                <p class="text-lg font-bold text-gray-800">৳${t.prizes?.first}</p>
+                            </div>
+                            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-3xl border-2 border-blue-100 text-center">
+                                <p class="text-[12px] text-blue-600 uppercase font-bold mb-2">2nd Prize 🥈</p>
+                                <p class="text-lg font-bold text-gray-800">৳${t.prizes?.second}</p>
+                            </div>
+                            <div class="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-3xl border-2 border-green-100 text-center">
+                                <p class="text-[12px] text-green-600 uppercase font-bold mb-2">3rd Prize 🥉</p>
+                                <p class="text-lg font-bold text-gray-800">৳${t.prizes?.third}</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 grid grid-cols-2 gap-4">
+                            <div class="bg-gradient-to-br from-orange-50 to-yellow-50 p-4 rounded-3xl border-2 border-orange-100 text-center">
+                                <p class="text-[12px] text-orange-600 uppercase font-bold mb-2">Entry Fee</p>
+                                <p class="text-lg font-bold text-gray-800">৳${t.entryFee}</p>
+                            </div>
+                            <div class="bg-gradient-to-br from-cyan-50 to-blue-50 p-4 rounded-3xl border-2 border-cyan-100 text-center">
+                                <p class="text-[12px] text-cyan-600 uppercase font-bold mb-2">Per Kill</p>
+                                <p class="text-lg font-bold text-gray-800">৳${t.perKill}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="vibrant-card p-9 rounded-[48px]">
+                        <h3 class="text-[15px] font-bold uppercase text-gray-600 tracking-widest mb-7 flex justify-between items-center">
+                            <span>Players List  (${t.players?.length || 0}) 👥</span>
+                            <span class="text-[13px] ${categoryColor} text-white px-4 py-1.5 rounded-full">${categoryText}</span>
+                        </h3>
+                        <div class="space-y-4">
+                            ${(t.players || []).map(p => {
+                                const playerModeText = p.mode === 'SOLO' ? 'SOLO' : p.mode === 'DUO' ? 'DUO' : 'SQUAD';
+                                const playerModeColor = p.mode === 'SOLO' ? 'solo-bg' : p.mode === 'DUO' ? 'duo-bg' : 'squad-bg';
+                                const isCurrentUser = user && p.userId === user.id;
+                                return `
+                                    <div class="bg-gradient-to-r from-blue-50 to-cyan-50 p-6 rounded-[32px] border-2 border-blue-200 flex justify-between items-center hover:shadow-lg transition-shadow ${isCurrentUser ? 'ring-2 ring-orange-400' : ''}">
+                                        <div>
+                                            <p class="text-base font-bold text-gray-800">${p.names.join(' & ')} ${isCurrentUser ? '(আপনি)' : ''}</p>
+                                            <div class="flex items-center gap-3 mt-2">
+                                                <span class="text-[12px] text-white font-bold px-3 py-1 rounded-full ${playerModeColor}">${playerModeText}</span>
+                                                <span class="text-[11px] text-gray-600 font-bold">৳${p.fee}</span>
+                                            </div>
+                                        </div>
+                                        <span class="text-[13px] font-bold ${isCurrentUser ? 'text-green-600' : 'text-blue-600'} uppercase ${isCurrentUser ? 'bg-green-100' : 'bg-blue-100'} px-5 py-2.5 rounded-full border-2 ${isCurrentUser ? 'border-green-200' : 'border-blue-200'}">
+                                            ${isCurrentUser ? 'আপনি ✓' : 'Joined'}
+                                        </span>
+                                    </div>
+                                `;
+                            }).join('') || '<p class="text-center text-[15px] opacity-50 italic py-8 uppercase font-bold text-gray-500">এখনো কেউ জয়েন করেনি</p>'}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('match').classList.add('active');
+            
+            // Start Countdown Logic
+            const countDownDate = new Date(t.startTime).getTime();
+            
+            function updateTimer() {
+                const now = new Date().getTime();
+                const distance = countDownDate - now;
+
+                if (distance < 0) {
+                    clearInterval(countdownInterval);
+                    document.getElementById("countdown").classList.add('hidden');
+                    document.getElementById("liveMsg").classList.remove('hidden');
+                    return;
+                }
+
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                // Check if elements exist before updating (in case user left page)
+                if(document.getElementById("days")) {
+                    document.getElementById("days").innerHTML = days < 10 ? "0" + days : days;
+                    document.getElementById("hours").innerHTML = hours < 10 ? "0" + hours : hours;
+                    document.getElementById("minutes").innerHTML = minutes < 10 ? "0" + minutes : minutes;
+                    document.getElementById("seconds").innerHTML = seconds < 10 ? "0" + seconds : seconds;
+                }
+            }
+
+            updateTimer(); // Run once immediately
+            countdownInterval = setInterval(updateTimer, 1000);
+
+            if (!isJoined && status.label !== 'End') {
+                const defaultMode = 'SOLO'; 
+                setTimeout(() => {
+                    const modeBtn = document.querySelector(`button[onclick*="'${defaultMode}'"]`);
+                    if (modeBtn) modeBtn.click();
+                }, 50);
+            }
+        }
+
+
+        let currentMode = 'SOLO';
+        let currentPlayerCount = 1;
+
+        function setMatchMode(mode, playerCount) {
+            currentMode = mode;
+            currentPlayerCount = playerCount;
+            
+            document.querySelectorAll('.match-mode-btn').forEach(btn => {
+                btn.classList.remove('sunshine-gradient', 'text-white', 'shadow-lg');
+                btn.classList.add('text-gray-600');
+            });
+            const clickedBtn = document.querySelector(`button[onclick*="${mode}"]`);
+            if (clickedBtn) {
+                clickedBtn.classList.add('sunshine-gradient', 'text-white', 'shadow-lg');
+                clickedBtn.classList.remove('text-gray-600');
+            }
+            
+            const namesHTML = Array.from({length: playerCount}, (_, i) => `
+                <div>
+                    <label class="text-[13px] text-gray-600 uppercase font-bold ml-2 mb-2 block">খেলোয়াড় ${i+1} গেম নাম 👤</label>
+                    <input type="text" placeholder="নাম লিখুন" class="w-full bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 p-5 rounded-2xl text-base font-bold text-gray-800 outline-none focus:border-orange-400 player-name-input" />
+                </div>
+            `).join('');
+            
+            document.getElementById('playerNames').innerHTML = namesHTML;
+            
+            const tournamentId = document.querySelector('button[id="joinBtn"]')?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+            if (tournamentId) {
+                const t = state.tournaments.find(x => x.id === tournamentId);
+                if (t) {
+                    const totalFee = t.entryFee * playerCount;
+                    const joinBtn = document.getElementById('joinBtn');
+                    if (joinBtn) {
+                        joinBtn.textContent = `Join Now (৳${totalFee})`;
+                    }
+                }
+            }
+        }
+
+        function joinTournament(tournamentId, matchCategory) {
+            const user = state.currentUser;
+            if (!user) return showPage('login');
+            
+            const t = state.tournaments.find(x => x.id === tournamentId);
+            if (!t) return showAlert('টুর্নামেন্ট পাওয়া যায়নি!');
+            
+            // Check if already joined
+            const isAlreadyJoined = t.players?.some(p => p.userId === user.id);
+            if (isAlreadyJoined) {
+                return showAlert('আপনি ইতিমধ্যেই এই ম্যাচে জয়েন করেছেন! ✅');
+            }
+            
+            // Validate mode based on match category
+            if (matchCategory === 'SOLO' && currentMode !== 'SOLO') {
+                return showAlert('SOLO ম্যাচে শুধুমাত্র SOLO মুডে খেলা যায়!');
+            }
+            if (matchCategory === 'DUO' && currentMode === 'SQUAD') {
+                return showAlert('DUO ম্যাচে SQUAD মুডে খেলা যায় না!');
+            }
+            
+            const multiplier = currentMode === 'SOLO' ? 1 : currentMode === 'DUO' ? 2 : 4;
+            const totalFee = t.entryFee * multiplier;
+            
+            if (Number(user.balance) < totalFee) return showAlert('Balance নেই! 💸');
+            
+            const nameInputs = document.querySelectorAll('.player-name-input');
+            const names = Array.from(nameInputs).map(input => input.value.trim()).filter(name => name);
+            
+            if (names.length !== multiplier) return showAlert('সবার গেম নাম দিন! ✏️');
+            
+            // Check for duplicate names
+            if (new Set(names).size !== names.length) {
+                return showAlert('একই নাম দুইবার ব্যবহার করা যাবে না!');
+            }
+            
+            const updates = {};
+            const players = t.players || [];
+            updates[`tournaments/${tournamentId}/players/${players.length}`] = {
+                userId: user.id,
+                names: names,
+                mode: currentMode,
+                fee: totalFee,
+                timestamp: Date.now()
+            };
+            updates[`users/${user.id}/balance`] = Number(user.balance) - totalFee;
+            
+            firebase.database().ref().update(updates)
+                .then(() => {
+                    showAlert('জয়েন করা সফল হয়েছে! 🎉');
+                    // Refresh the match details page
+                    showMatchDetails(tournamentId);
+                })
+                .catch(error => showAlert('ত্রুটি হয়েছে: ' + error.message));
+        }
+
+        function renderWallet() {
+            const user = state.currentUser;
+            if (!user) {
+                document.getElementById('wallet').innerHTML = `
+                    <div class="py-32 text-center">
+                        <p class="text-lg font-bold uppercase tracking-widest mb-6 text-gray-600">লগইন করুন 🔐</p>
+                        <button onclick="showPage('login')" class="sunshine-gradient px-12 py-5 rounded-3xl font-bold text-base uppercase text-white shadow-xl">লগইন</button>
+                    </div>
+                `;
+                return;
+            }
+
+            document.getElementById('wallet').innerHTML = `
+                <div class="space-y-7">
+                    <div class="vibrant-card p-12 rounded-[48px] text-center">
+                        <p class="text-[16px] text-gray-600 font-bold uppercase tracking-widest mb-4">বর্তমান Balance 💰</p>
+                        <h2 class="text-7xl font-bold text-orange-600 tracking-tight">৳${Number(user.balance).toFixed(0)}</h2>
+                    </div>
+                    
+                    <div id="walletTabs" class="flex bg-gradient-to-r from-orange-50 to-yellow-50 p-3 rounded-[32px] border-2 border-orange-200 shadow-lg">
+                        ${['DEPOSIT', 'WITHDRAW', 'HISTORY'].map(tab => `
+                            <button onclick="showWalletTab('${tab}')" class="flex-1 py-6 text-[15px] font-bold rounded-3xl transition-all wallet-tab-btn ${tab === 'DEPOSIT' ? 'sunshine-gradient text-white shadow-lg' : 'text-gray-600'}">${tab}</button>
+                        `).join('')}
+                    </div>
+                    
+                    <div id="walletContent"></div>
+                </div>
+            `;
+            
+            showWalletTab('DEPOSIT');
+        }
+function renderRules() {
+    const rulesText = state.settings.gameRules || "কোনো নিয়মাবলী সেট করা হয়নি।";
+    
+    // টেক্সটকে লাইন ব্রেক অনুযায়ী আলাদা করে লিস্ট আকারে দেখানো
+    const rulesList = rulesText.split('\n').filter(line => line.trim() !== '');
+
+    const rulesHTML = rulesList.map((rule, index) => `
+        <div class="flex gap-4 items-start bg-white p-4 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+            <span class="bg-orange-100 text-orange-600 font-bold w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full text-sm">${index + 1}</span>
+            <p class="text-gray-700 text-[14px] font-bold leading-relaxed">${rule}</p>
+        </div>
+    `).join('');
+
+    document.getElementById('rules').innerHTML = `
+        <div class="space-y-6 pb-20">
+            <div class="vibrant-card p-8 rounded-[40px] text-center bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-100">
+                <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center text-4xl mx-auto mb-4 shadow-lg">📜</div>
+                <h2 class="text-2xl font-bold text-gray-800">খেলার নিয়মাবলী</h2>
+                <p class="text-[12px] text-gray-500 font-bold uppercase tracking-widest mt-2">Rules to Play</p>
+            </div>
+            
+            <div class="space-y-3">
+                ${rulesHTML}
+            </div>
+
+            <button onclick="showPage('home')" class="w-full bg-gray-800 text-white py-5 rounded-[32px] font-bold uppercase text-[14px] shadow-xl active:scale-95 transition-transform mt-4">ঠিক আছে, বুঝেছি ✅</button>
+        </div>
+    `;
+}
+
+        function showWalletTab(tab) {
+            document.querySelectorAll('.wallet-tab-btn').forEach(btn => {
+                btn.classList.remove('sunshine-gradient', 'text-white', 'shadow-lg');
+                btn.classList.add('text-gray-600');
+            });
+            const activeBtn = document.querySelector(`button[onclick="showWalletTab('${tab}')"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('sunshine-gradient', 'text-white', 'shadow-lg');
+                activeBtn.classList.remove('text-gray-600');
+            }
+            
+            const user = state.currentUser;
+            const settings = state.settings;
+            
+            if (tab === 'HISTORY') {
+                const payments = state.payments
+                    .filter(p => p.userId === user.id)
+                    .sort((a, b) => b.timestamp - a.timestamp);
+                
+                const historyHTML = payments.map(p => `
+                    <div class="vibrant-card p-7 rounded-[40px] flex justify-between items-center hover:shadow-lg transition-shadow">
+                        <div>
+                            <p class="text-[14px] font-bold text-gray-800 uppercase tracking-widest">${p.type} - ${p.method}</p>
+                            <p class="text-[12px] font-bold uppercase mt-2 tracking-widest ${p.status === 'APPROVED' ? 'text-green-600' : p.status === 'REJECTED' ? 'text-red-600' : 'text-yellow-600'}">${p.status}</p>
+                        </div>
+                        <p class="text-2xl font-bold colorful-text">৳${p.amount}</p>
+                    </div>
+                `).join('');
+                
+                document.getElementById('walletContent').innerHTML = `
+                    <div class="space-y-5">
+                        ${historyHTML || '<p class="text-center py-12 opacity-50 text-base italic uppercase font-bold text-gray-500">কোনো লেনদেন নেই</p>'}
+                    </div>
+                `;
+            } else {
+                document.getElementById('walletContent').innerHTML = `
+                    <form onsubmit="submitPayment(event, '${tab}')" class="vibrant-card p-9 rounded-[48px] space-y-7">
+                        <div class="flex gap-5">
+                            ${['BKASH', 'NAGAD'].map(method => `
+                                <button type="button" onclick="setPaymentMethod('${method}')" class="flex-1 py-6 text-[14px] font-bold rounded-3xl border-2 transition-all payment-method-btn ${method === 'BKASH' ? 'ocean-gradient text-white border-blue-400' : 'bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200 text-gray-700'}">${method}</button>
+                            `).join('')}
+                        </div>
+                        
+                        ${tab === 'DEPOSIT' ? `
+                            <div class="p-7 bg-gradient-to-r from-green-50 to-emerald-50 rounded-[32px] border-2 border-green-200 text-[14px] font-bold text-gray-700 leading-relaxed">
+                                নিচের যেকোনো নাম্বারে সেন্ডমানি করে আবেদন করুন:<br/><br/>
+                                বিকাশ: <span class="text-orange-600 text-lg">${settings.adminBkash}</span><br/>
+                                নগদ: <span class="text-purple-600 text-lg">${settings.adminNagad}</span>
+                            </div>
+                        ` : ''}
+                        
+                        <div class="space-y-6">
+                            <input type="number" id="paymentAmount" placeholder="টাকার পরিমাণ (৳)" class="w-full bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 p-6 rounded-3xl text-base font-bold text-gray-800 outline-none focus:border-orange-400" required />
+                            <input type="text" id="paymentNumber" placeholder="বিকাশ/নগদ নাম্বার" class="w-full bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 p-6 rounded-3xl text-base font-bold text-gray-800 outline-none focus:border-orange-400" required />
+                            ${tab === 'DEPOSIT' ? '<input type="text" id="paymentTrx" placeholder="ট্রানজেকশন আইডি" class="w-full bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 p-6 rounded-3xl text-base font-bold text-gray-800 outline-none focus:border-orange-400" required />' : ''}
+                        </div>
+                        
+                        <button type="submit" class="w-full sunshine-gradient py-7 rounded-[32px] font-bold text-base uppercase text-white shadow-2xl active:scale-95 transition-transform">Confirm ✅</button>
+                    </form>
+                `;
+                
+                document.querySelector('.payment-method-btn').click();
+            }
+        }
+
+        function setPaymentMethod(method) {
+            document.querySelectorAll('.payment-method-btn').forEach(btn => {
+                btn.classList.remove('ocean-gradient', 'text-white', 'border-blue-400');
+                btn.classList.add('bg-gradient-to-r', 'from-purple-50', 'to-pink-50', 'border-purple-200', 'text-gray-700');
+            });
+            const clickedBtn = document.querySelector(`button[onclick="setPaymentMethod('${method}')"]`);
+            if (clickedBtn) {
+                clickedBtn.classList.add('ocean-gradient', 'text-white', 'border-blue-400');
+                clickedBtn.classList.remove('bg-gradient-to-r', 'from-purple-50', 'to-pink-50', 'border-purple-200', 'text-gray-700');
+            }
+        }
+
+        function submitPayment(event, type) {
+            event.preventDefault();
+            
+            const user = state.currentUser;
+            const settings = state.settings;
+            const amount = Number(document.getElementById('paymentAmount').value);
+            const number = document.getElementById('paymentNumber').value;
+            const trx = type === 'DEPOSIT' ? document.getElementById('paymentTrx')?.value : '';
+            const method = document.querySelector('.payment-method-btn.ocean-gradient')?.textContent;
+            
+            if (!method) return showAlert('পেমেন্ট মেথড সিলেক্ট করুন!');
+            
+            if (type === 'DEPOSIT' && amount < settings.minDeposit) {
+                return showAlert(`সর্বনিম্ন ডিপোজিট ৳${settings.minDeposit} 💸`);
+            }
+            if (type === 'WITHDRAW' && amount < settings.minWithdraw) {
+                return showAlert(`সর্বনিম্ন উইথড্র ৳${settings.minWithdraw} 💸`);
+            }
+            if (type === 'WITHDRAW' && amount > user.balance) {
+                return showAlert('পর্যাপ্ত Balance নেই! 💸');
+            }
+            
+            const paymentId = Math.random().toString(36).substr(2, 9);
+            const paymentData = {
+                id: paymentId,
+                userId: user.id,
+                userName: user.name,
+                type: type,
+                method: method,
+                amount: amount,
+                num: number,
+                trx: trx,
+                status: 'PENDING',
+                timestamp: Date.now()
+            };
+            
+            firebase.database().ref('payments/' + paymentId).set(paymentData)
+                .then(() => {
+                    showAlert('আবেদন সফল হয়েছে! ✅');
+                    document.querySelectorAll('input').forEach(input => input.value = '');
+                    // Refresh wallet page
+                    renderWallet();
+                })
+                .catch(error => showAlert('ত্রুটি হয়েছে: ' + error.message));
+        }
+
+        function renderProfile() {
+            const user = state.currentUser;
+            if (!user) {
+                document.getElementById('profile').innerHTML = `
+                    <div class="text-center py-40">
+                        <button onclick="showPage('login')" class="sunshine-gradient px-12 py-5 rounded-3xl font-bold text-base uppercase text-white">লগইন</button>
+                    </div>
+                `;
+                return;
+            }
+
+            document.getElementById('profile').innerHTML = `
+                <div class="space-y-7 pb-12">
+                    <div class="vibrant-card p-12 rounded-[56px] text-center relative overflow-hidden">
+                        <div class="absolute inset-0 ocean-gradient opacity-10"></div>
+                        <div class="w-32 h-32 rainbow-gradient rounded-full flex items-center justify-center text-6xl mx-auto mb-8 shadow-2xl text-white">👤</div>
+                        <h2 class="text-4xl font-bold text-gray-800 mb-2">${user.name}</h2>
+                        <p class="text-gray-600 text-[14px] font-bold uppercase tracking-[0.3em] mt-2">${user.phone}</p>
+                        <div class="mt-8 p-6 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-3xl inline-block border-2 border-orange-200 shadow-lg">
+                            <p class="text-gray-800 font-bold text-4xl tracking-tight">৳${Number(user.balance).toFixed(0)}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="vibrant-card p-9 rounded-[48px] space-y-6">
+                        <input id="profileName" value="${user.name}" class="w-full bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 p-6 rounded-3xl text-base font-bold text-gray-800 outline-none focus:border-orange-400" placeholder="নাম পরিবর্তন করুন ✏️" />
+                        <button onclick="updateProfile()" class="w-full ocean-gradient py-6 rounded-3xl font-bold text-[14px] uppercase text-white border-2 border-blue-300 shadow-lg">Update Profile 🔄</button>
+                        <div class="pt-6 border-t-2 border-orange-100 space-y-5">
+                            <button onclick="showPage('contact')" class="w-full spring-gradient text-white py-7 rounded-3xl font-bold text-[14px] uppercase border-2 border-teal-300 active:scale-95 transition-transform shadow-lg">অ্যাডমিন সাপোর্ট (চ্যাট) 💬</button>
+                            <button onclick="logout()" class="w-full bg-gradient-to-r from-red-500 to-pink-500 text-white py-7 rounded-3xl font-bold text-[14px] uppercase border-2 border-red-300 active:scale-95 transition-transform shadow-lg">Log out 🚪</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateProfile() {
+            const newName = document.getElementById('profileName').value;
+            const user = state.currentUser;
+            
+            if (!newName.trim()) return showAlert('নাম দিন! ✏️');
+            
+            firebase.database().ref('users/' + user.id).update({ name: newName })
+                .then(() => {
+                    showAlert('আপডেট হয়েছে! ✅');
+                    state.currentUser.name = newName;
+                    localStorage.setItem('ff_user', JSON.stringify(state.currentUser));
+                    renderHeader();
+                    renderProfile();
+                })
+                .catch(error => showAlert('ত্রুটি হয়েছে: ' + error.message));
+        }
+
+                function renderLogin() {
+            document.getElementById('login').innerHTML = `
+                <div class="vibrant-card p-12 rounded-[56px] mt-12 zoom-in shadow-2xl">
+                    <h2 class="font-bold text-center mb-12 text-4xl colorful-text" id="loginTitle">লগইন 🔐</h2>
+                    <form onsubmit="handleAuth(event)" class="space-y-7">
+                        <div id="nameField" style="display: none;">
+                            <input type="text" id="regName" placeholder="পুরো নাম ✏️" class="w-full bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 p-6 rounded-3xl text-base font-bold text-gray-800 outline-none focus:border-orange-400" />
+                        </div>
+                        
+                        <input type="text" id="phone" placeholder="ফোন নাম্বার 📱" class="w-full bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 p-6 rounded-3xl text-base font-bold text-gray-800 outline-none focus:border-orange-400" required />
+                        
+                        <div class="relative">
+                            <input type="password" id="password" placeholder="পাসওয়ার্ড 🔒" class="w-full bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 p-6 pr-14 rounded-3xl text-base font-bold text-gray-800 outline-none focus:border-orange-400" required />
+                            <button type="button" onclick="togglePasswordVisibility()" class="absolute right-5 top-1/2 transform -translate-y-1/2 text-xl focus:outline-none p-2 opacity-60 hover:opacity-100 transition-opacity" id="passToggleBtn">
+                                👁️
+                            </button>
+                        </div>
+
+                        <button type="submit" class="w-full sunshine-gradient py-7 rounded-[32px] font-bold text-lg text-white mt-8 shadow-2xl active:scale-95 transition-transform" id="authBtn">লগইন</button>
+                    </form>
+                    <p onclick="toggleAuthMode()" class="text-center text-[14px] text-gray-600 mt-12 cursor-pointer uppercase font-bold tracking-widest underline" id="toggleAuth">নতুন অ্যাকাউন্ট তৈরি করুন ✨</p>
+                </div>
+            `;
+        }
+        function togglePasswordVisibility() {
+            const passInput = document.getElementById('password');
+            const toggleBtn = document.getElementById('passToggleBtn');
+            
+            if (passInput.type === 'password') {
+                passInput.type = 'text';
+                toggleBtn.innerHTML = '🙈'; // চোখ বন্ধ আইকন
+            } else {
+                passInput.type = 'password';
+                toggleBtn.innerHTML = '👁️'; // চোখ খোলা আইকন
+            }
+        }
+
+        function toggleAuthMode() {
+            const isReg = document.getElementById('loginTitle').textContent === 'লগইন 🔐';
+            document.getElementById('loginTitle').textContent = isReg ? 'অ্যাকাউন্ট তৈরি ✨' : 'লগইন 🔐';
+            document.getElementById('nameField').style.display = isReg ? 'block' : 'none';
+            document.getElementById('authBtn').textContent = isReg ? 'রেজিস্ট্রেশন' : 'লগইন';
+            document.getElementById('toggleAuth').textContent = isReg ? 'ইতিমধ্যেই আইডি আছে? লগইন করুন' : 'নতুন অ্যাকাউন্ট তৈরি করুন ✨';
+        }
+
+        function handleAuth(event) {
+            event.preventDefault();
+            
+            const isReg = document.getElementById('loginTitle').textContent === 'অ্যাকাউন্ট তৈরি ✨';
+            const phone = document.getElementById('phone').value;
+            const password = document.getElementById('password').value;
+            
+            if (phone === 'admin' && password === '123456') {
+                const adminUser = { id: 'admin-master', name: 'Admin 👑', phone: '01700000000', balance: 99999, role: 'ADMIN' };
+                localStorage.setItem('ff_user', JSON.stringify(adminUser));
+                state.currentUser = adminUser;
+                renderHeader();
+                showPage('home');
+                showAlert('অ্যাডমিন হিসাবে লগইন সফল! 👑');
+                return;
+            }
+            
+            if (isReg) {
+                const name = document.getElementById('regName').value;
+                if (!name.trim()) return showAlert('নাম দিন! ✏️');
+                
+                const existingUser = state.users.find(u => u.phone === phone);
+                if (existingUser) return showAlert('এই নাম্বারে আইডি আছে! 📱');
+                
+                const id = Math.random().toString(36).substr(2, 6);
+                const newUser = { id, name, phone, password, balance: 0, role: 'PLAYER' };
+                
+                firebase.database().ref('users/' + id).set(newUser)
+                    .then(() => {
+                        localStorage.setItem('ff_user', JSON.stringify(newUser));
+                        state.currentUser = newUser;
+                        renderHeader();
+                        showPage('home');
+                        showAlert('রেজিস্ট্রেশন সফল! 🎉');
+                    })
+                    .catch(error => showAlert('ত্রুটি হয়েছে: ' + error.message));
+            } else {
+                const user = state.users.find(u => u.phone === phone && u.password === password);
+                if (user) {
+                    localStorage.setItem('ff_user', JSON.stringify(user));
+                    state.currentUser = user;
+                    renderHeader();
+                    showPage('home');
+                    showAlert('লগইন সফল! 🎉');
+                } else {
+                    showAlert('ভুল আইডি বা পাসওয়ার্ড! ❌');
+                }
+            }
+        }
+
+        function renderAdmin() {
+            const user = state.currentUser;
+            if (!user || user.role !== 'ADMIN') {
+                document.getElementById('admin').innerHTML = `
+                    <div class="py-40 text-center">
+                        <p class="text-lg font-bold uppercase tracking-widest mb-6 colorful-text">অ্যাডমিন এক্সেস নেই 👑</p>
+                        <button onclick="showPage('login')" class="sunshine-gradient px-12 py-5 rounded-3xl font-bold text-base uppercase text-white">লগইন</button>
+                    </div>
+                `;
+                return;
+            }
+
+            document.getElementById('admin').innerHTML = `
+                <div class="space-y-7">
+                    <div class="flex gap-4 overflow-x-auto pb-6 scrollbar-hide" id="adminTabs">
+                        ${['PAYMENTS', 'MATCHES', 'USERS', 'SUPPORT', 'SETTINGS'].map(tab => `
+                            <button onclick="showAdminTab('${tab}')" class="px-7 py-5 rounded-3xl text-[14px] font-bold uppercase border-2 whitespace-nowrap transition-all admin-tab-btn ${tab === 'PAYMENTS' ? 'sunshine-gradient text-white border-orange-300 shadow-lg' : 'bg-gradient-to-r from-blue-50 to-cyan-50 text-gray-700 border-blue-200'}">${tab}</button>
+                        `).join('')}
+                    </div>
+                    
+                    <div id="adminContent"></div>
+                </div>
+            `;
+            
+            showAdminTab('PAYMENTS');
+        }
+
+        function showAdminTab(tab) {
+            document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+                btn.classList.remove('sunshine-gradient', 'text-white', 'border-orange-300', 'shadow-lg');
+                btn.classList.add('bg-gradient-to-r', 'from-blue-50', 'to-cyan-50', 'text-gray-700', 'border-blue-200');
+            });
+            const activeBtn = document.querySelector(`button[onclick="showAdminTab('${tab}')"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('sunshine-gradient', 'text-white', 'border-orange-300', 'shadow-lg');
+                activeBtn.classList.remove('bg-gradient-to-r', 'from-blue-50', 'to-cyan-50', 'text-gray-700', 'border-blue-200');
+            }
+            
+            switch(tab) {
+                case 'PAYMENTS': renderAdminPayments(); break;
+                case 'MATCHES': renderAdminMatches(); break;
+                case 'USERS': renderAdminUsers(); break;
+                case 'SUPPORT': renderAdminSupport(); break;
+                case 'SETTINGS': renderAdminSettings(); break;
+            }
+        }
+
+        function renderAdminPayments() {
+            const pendingPayments = state.payments.filter(p => p.status === 'PENDING');
+            
+            const paymentsHTML = pendingPayments.map(p => `
+                <div class="vibrant-card p-8 rounded-[40px] space-y-6">
+                    <div class="flex justify-between items-center">
+                        <span class="text-lg font-bold text-gray-800">${p.userName}</span>
+                        <span class="sunshine-gradient text-white px-6 py-2.5 rounded-full text-[14px] font-bold">৳${p.amount}</span>
+                    </div>
+                    <p class="text-[13px] text-gray-600 font-bold uppercase tracking-widest">${p.type} | ${p.method} | ${p.num}</p>
+                    <div class="flex gap-5 pt-4">
+                        <button onclick="processPayment('${p.id}', 'APPROVED')" class="flex-1 bg-gradient-to-r from-green-500 to-emerald-500 py-5 rounded-3xl text-[14px] font-bold uppercase text-white shadow-lg active:scale-95">Approve ✅</button>
+                        <button onclick="processPayment('${p.id}', 'REJECTED')" class="flex-1 bg-gradient-to-r from-red-500 to-pink-500 py-5 rounded-3xl text-[14px] font-bold uppercase text-white shadow-lg active:scale-95">Reject ❌</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('adminContent').innerHTML = `
+                <div class="space-y-6">
+                    ${paymentsHTML || '<p class="text-center py-24 opacity-50 text-base italic uppercase font-bold text-gray-500">কোনো পেন্ডিং নেই</p>'}
+                </div>
+            `;
+        }
+
+        function processPayment(paymentId, status) {
+            const payment = state.payments.find(p => p.id === paymentId);
+            if (!payment) return;
+            
+            const user = state.users.find(u => u.id === payment.userId);
+            const updates = {};
+            updates[`payments/${paymentId}/status`] = status;
+            
+            if (status === 'APPROVED' && user) {
+                const amount = Number(payment.amount);
+                if (payment.type === 'DEPOSIT') {
+                    updates[`users/${user.id}/balance`] = Number(user.balance) + amount;
+                } else {
+                    updates[`users/${user.id}/balance`] = Number(user.balance) - amount;
+                }
+            }
+            
+            firebase.database().ref().update(updates)
+                .then(() => {
+                    showAlert('প্রক্রিয়া সম্পন্ন হয়েছে! ✅');
+                    renderAdminPayments();
+                })
+                .catch(error => showAlert('ত্রুটি হয়েছে: ' + error.message));
+        }
+
+                        function renderAdminMatches() {
+    document.getElementById('adminContent').innerHTML = `
+        <div class="space-y-6">
+            <div class="vibrant-card p-10 rounded-[48px] space-y-6">
+                <h4 class="font-bold text-[14px] text-orange-600 uppercase tracking-widest mb-6">ম্যাচ ম্যানেজমেন্ট 🎮</h4>
+                
+                <input type="hidden" id="editMatchId" />
+
+                <input id="matchTitle" placeholder="ম্যাচের নাম ✨" class="w-full bg-gradient-to-r from-blue-50 to-cyan-50 p-6 rounded-3xl text-base font-bold border-2 border-blue-200 text-gray-800 outline-none focus:border-orange-400" />
+                
+                <div class="space-y-3">
+                    <label class="text-[13px] text-gray-600 font-bold ml-2">ম্যাচ ক্যাটাগরি নির্বাচন করুন</label>
+                    <div class="grid grid-cols-3 gap-3" id="categorySelector">
+                        ${['SOLO', 'DUO', 'SQUAD'].map(category => {
+                            const categoryText = category === 'SOLO' ? 'SOLO' : category === 'DUO' ? 'DUO' : 'SQUAD';
+                            return `
+                                <button type="button" onclick="setMatchCategory('${category}')" 
+                                        class="py-5 rounded-2xl text-[13px] font-bold transition-all match-category-btn ${category === 'SOLO' ? 'solo-bg text-white shadow-lg' : 'bg-gray-100 text-gray-600'}">
+                                    ${categoryText}
+                                </button>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-[12px] text-gray-600 font-bold ml-2">1st Prize 🥇</label>
+                        <input type="number" id="firstPrize" value="300" class="bg-gradient-to-r from-blue-50 to-cyan-50 p-5 rounded-3xl text-[14px] font-bold border-2 border-blue-200 text-gray-800 outline-none" />
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[12px] text-gray-600 font-bold ml-2">2nd Prize 🥈</label>
+                        <input type="number" id="secondPrize" value="150" class="bg-gradient-to-r from-blue-50 to-cyan-50 p-5 rounded-3xl text-[14px] font-bold border-2 border-blue-200 text-gray-800 outline-none" />
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[12px] text-gray-600 font-bold ml-2">3rd Prize 🥉</label>
+                        <input type="number" id="thirdPrize" value="50" class="bg-gradient-to-r from-blue-50 to-cyan-50 p-5 rounded-3xl text-[14px] font-bold border-2 border-blue-200 text-gray-800 outline-none" />
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4">
+                    <input type="number" id="entryFee" placeholder="Fee (৳)" value="30" class="bg-gradient-to-r from-blue-50 to-cyan-50 p-6 rounded-3xl text-base font-bold border-2 border-blue-200 text-gray-800 outline-none" />
+                    <input type="number" id="perKill" placeholder="Kill (৳)" value="10" class="bg-gradient-to-r from-blue-50 to-cyan-50 p-6 rounded-3xl text-base font-bold border-2 border-blue-200 text-gray-800 outline-none" />
+                    <input type="number" id="maxPlayers" placeholder="Max P." value="48" class="bg-gradient-to-r from-red-50 to-pink-50 p-6 rounded-3xl text-base font-bold border-2 border-red-200 text-gray-800 outline-none" />
+                </div>
+
+                <div class="grid grid-cols-2 gap-5">
+                    <input type="datetime-local" id="startTime" class="bg-gradient-to-r from-blue-50 to-cyan-50 p-6 rounded-3xl text-[14px] font-bold border-2 border-blue-200 text-gray-800 outline-none" />
+                    <input id="roomId" placeholder="রুম আইডি 🔑" class="bg-gradient-to-r from-blue-50 to-cyan-50 p-6 rounded-3xl text-[14px] font-bold border-2 border-blue-200 text-gray-800 outline-none" />
+                </div>
+                <input id="password" placeholder="পাসওয়ার্ড 🔒" class="w-full bg-gradient-to-r from-blue-50 to-cyan-50 p-6 rounded-3xl text-[14px] font-bold border-2 border-blue-200 text-gray-800 outline-none" />
+                
+                <div class="flex gap-3">
+                    <button onclick="saveTournament()" id="saveBtn" class="flex-1 sunshine-gradient py-6 rounded-3xl font-bold text-[14px] uppercase text-white shadow-2xl active:scale-95">Save / Create 🚀</button>
+                    <button onclick="clearMatchForm()" class="px-6 bg-gray-200 rounded-3xl font-bold text-gray-500 uppercase active:scale-95">Clear 🧹</button>
+                </div>
+            </div>
+            
+            <div class="grid gap-5">
+                ${state.tournaments.slice().sort((a, b) => b.startTime - a.startTime).map(t => {
+                    const categoryColor = t.category === 'SOLO' ? 'solo-bg' : t.category === 'DUO' ? 'duo-bg' : 'squad-bg';
+                    const categoryText = t.category === 'SOLO' ? 'SOLO' : t.category === 'DUO' ? 'DUO' : 'SQUAD';
+                    const totalJoined = (t.players || []).reduce((sum, p) => sum + (p.names ? p.names.length : 0), 0);
+                    const maxP = t.maxPlayers || 48;
+
+                    return `
+                        <div class="vibrant-card p-7 rounded-[40px] flex flex-col gap-4 hover:shadow-lg">
+                            <div class="flex justify-between items-center">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <span class="text-base font-bold text-gray-800 truncate">${t.title}</span>
+                                        <span class="text-[12px] font-bold text-white px-3 py-1 rounded-full ${categoryColor}">${categoryText}</span>
+                                    </div>
+                                    <div class="flex items-center gap-4">
+                                        <span class="text-[12px] text-gray-600 font-bold">${formatTime(t.startTime)}</span>
+                                        <span class="text-[12px] font-bold text-orange-600 border border-orange-200 px-2 py-0.5 rounded-lg bg-orange-50">${totalJoined}/${maxP} Joined</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex gap-3 pt-3 border-t border-gray-100">
+                                <button onclick="viewMatchPlayers('${t.id}')" class="flex-1 bg-purple-50 text-purple-600 py-3 rounded-2xl font-bold text-[13px] uppercase active:scale-95 border border-purple-200">প্লেয়ার্স 👥</button>
+                                <button onclick="editTournament('${t.id}')" class="flex-1 bg-blue-50 text-blue-600 py-3 rounded-2xl font-bold text-[13px] uppercase active:scale-95 border border-blue-200">এডিট ✏️</button>
+                                <button onclick="deleteTournament('${t.id}')" class="flex-1 bg-red-50 text-red-600 py-3 rounded-2xl font-bold text-[13px] uppercase active:scale-95 border border-red-200">মুছুন ❌</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        </div>
+    `;
+    
+    clearMatchForm(); 
+}
+
+        function setMatchCategory(category) {
+            currentMatchCategory = category;
+            
+            document.querySelectorAll('.match-category-btn').forEach(btn => {
+                const cat = btn.textContent.includes('SOLO') ? 'SOLO' : 
+                          btn.textContent.includes('DUO') ? 'DUO' : 'SQUAD';
+                const categoryColor = cat === 'SOLO' ? 'solo-bg' : cat === 'DUO' ? 'duo-bg' : 'squad-bg';
+                
+                if (cat === category) {
+                    btn.classList.add(categoryColor, 'text-white', 'shadow-lg');
+                    btn.classList.remove('bg-gray-100', 'text-gray-600');
+                } else {
+                    btn.classList.remove(categoryColor, 'text-white', 'shadow-lg');
+                    btn.classList.add('bg-gray-100', 'text-gray-600');
+                }
+            });
+        }
+
+                        function saveTournament() {
+            const title = document.getElementById('matchTitle').value;
+            if (!title.trim()) return showAlert('ম্যাচের নাম দিন! ✏️');
+            if (!currentMatchCategory) return showAlert('ক্যাটাগরি নির্বাচন করুন!');
+            
+            // Hidden field theke ID neya
+            const existingId = document.getElementById('editMatchId').value;
+            
+            // Existing match khuje ber kora (jodi edit hoy)
+            let existingPlayers = [];
+            if (existingId) {
+                const existingMatch = state.tournaments.find(t => t.id === existingId);
+                if (existingMatch) existingPlayers = existingMatch.players || [];
+            }
+
+            const entryFee = Number(document.getElementById('entryFee').value);
+            const perKill = Number(document.getElementById('perKill').value);
+            const maxPlayers = Number(document.getElementById('maxPlayers').value) || 48;
+            const startTime = new Date(document.getElementById('startTime').value).getTime();
+            const roomId = document.getElementById('roomId').value;
+            const password = document.getElementById('password').value;
+            const prizes = {
+                first: Number(document.getElementById('firstPrize').value),
+                second: Number(document.getElementById('secondPrize').value),
+                third: Number(document.getElementById('thirdPrize').value)
+            };
+            
+            // ID Logic: Edit hole purono ID, New hole Random ID
+            const tournamentId = existingId ? existingId : Math.random().toString(36).substr(2, 6);
+            
+            const tournamentData = {
+                id: tournamentId,
+                title,
+                category: currentMatchCategory,
+                entryFee,
+                perKill,
+                maxPlayers,
+                startTime,
+                prizes,
+                roomId,
+                password,
+                players: existingPlayers // Purono player der rekhe deya
+            };
+            
+            firebase.database().ref('tournaments/' + tournamentId).set(tournamentData)
+                .then(() => {
+                    showAlert(existingId ? 'ম্যাচ আপডেট হয়েছে! ✅' : 'নতুন ম্যাচ তৈরি হয়েছে! 🎉');
+                    clearMatchForm(); // Form reset
+                    renderAdminMatches(); // List refresh
+                })
+                .catch(error => showAlert('ত্রুটি হয়েছে: ' + error.message));
+        }
+        function clearMatchForm() {
+            document.getElementById('editMatchId').value = ''; // ID reset
+            document.getElementById('matchTitle').value = '';
+            document.getElementById('roomId').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('saveBtn').innerHTML = "Save / Create 🚀"; // Button reset
+            
+            // Default Values
+            document.getElementById('entryFee').value = '30';
+            document.getElementById('perKill').value = '10';
+            document.getElementById('maxPlayers').value = '48';
+            document.getElementById('firstPrize').value = '300';
+            document.getElementById('secondPrize').value = '150';
+            document.getElementById('thirdPrize').value = '50';
+            
+            const now = new Date();
+            now.setHours(now.getHours() + 1);
+            const offset = now.getTimezoneOffset() * 60000;
+            const localISOTime = new Date(now.getTime() - offset).toISOString().slice(0, 16);
+            document.getElementById('startTime').value = localISOTime;
+            
+            setMatchCategory('SOLO');
+        }
+
+          function editTournament(tournamentId) {
+            const t = state.tournaments.find(x => x.id === tournamentId);
+            if (!t) return;
+            
+            // Hidden ID field set kora
+            document.getElementById('editMatchId').value = t.id;
+            
+            document.getElementById('matchTitle').value = t.title;
+            document.getElementById('entryFee').value = t.entryFee;
+            document.getElementById('perKill').value = t.perKill;
+            document.getElementById('maxPlayers').value = t.maxPlayers || 48;
+            document.getElementById('firstPrize').value = t.prizes?.first || 300;
+            document.getElementById('secondPrize').value = t.prizes?.second || 150;
+            document.getElementById('thirdPrize').value = t.prizes?.third || 50;
+            document.getElementById('roomId').value = t.roomId || '';
+            document.getElementById('password').value = t.password || '';
+            
+            const startDate = new Date(t.startTime);
+            const offset = startDate.getTimezoneOffset() * 60000; // Local timezone correction
+            const localISOTime = new Date(startDate.getTime() - offset).toISOString().slice(0, 16);
+            document.getElementById('startTime').value = localISOTime;
+            
+            setMatchCategory(t.category || 'SOLO');
+            
+            // Button Text Change
+            document.getElementById('saveBtn').innerHTML = "Update Match 🔄";
+            document.getElementById('matchTitle').focus();
+            
+            // Scroll to top
+            document.getElementById('adminContent').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function joinTournament(tournamentId, matchCategory) {
+            const user = state.currentUser;
+            if (!user) return showPage('login');
+            
+            const t = state.tournaments.find(x => x.id === tournamentId);
+            if (!t) return showAlert('টুর্নামেন্ট পাওয়া যায়নি!');
+            
+            // Check if already joined
+            const isAlreadyJoined = t.players?.some(p => p.userId === user.id);
+            if (isAlreadyJoined) {
+                return showAlert('আপনি ইতিমধ্যেই এই ম্যাচে জয়েন করেছেন! ✅');
+            }
+            
+            // Validate mode
+            if (matchCategory === 'SOLO' && currentMode !== 'SOLO') return showAlert('SOLO ম্যাচে শুধুমাত্র SOLO মুডে খেলা যায়!');
+            if (matchCategory === 'DUO' && currentMode === 'SQUAD') return showAlert('DUO ম্যাচে SQUAD মুডে খেলা যায় না!');
+            
+            // Calculate Players Count
+            const multiplier = currentMode === 'SOLO' ? 1 : currentMode === 'DUO' ? 2 : 4;
+            const totalFee = t.entryFee * multiplier;
+
+            // --- LIMIT CHECK LOGIC START ---
+            const currentTotalPlayers = (t.players || []).reduce((sum, p) => sum + (p.names ? p.names.length : 0), 0);
+            const maxPlayers = t.maxPlayers || 48; // Default 48
+
+            if (currentTotalPlayers + multiplier > maxPlayers) {
+                return showAlert(`দুঃখিত! ম্যাচ ফুল হয়ে গেছে। (বাকি আছে: ${maxPlayers - currentTotalPlayers} জন) ❌`);
+            }
+            // --- LIMIT CHECK LOGIC END ---
+            
+            if (Number(user.balance) < totalFee) return showAlert('Balance নেই! 💸');
+            
+            const nameInputs = document.querySelectorAll('.player-name-input');
+            const names = Array.from(nameInputs).map(input => input.value.trim()).filter(name => name);
+            
+            if (names.length !== multiplier) return showAlert('সবার গেম নাম দিন! ✏️');
+            
+            if (new Set(names).size !== names.length) return showAlert('একই নাম দুইবার ব্যবহার করা যাবে না!');
+            
+            const updates = {};
+            const players = t.players || [];
+            updates[`tournaments/${tournamentId}/players/${players.length}`] = {
+                userId: user.id,
+                names: names,
+                mode: currentMode,
+                fee: totalFee,
+                timestamp: Date.now()
+            };
+            updates[`users/${user.id}/balance`] = Number(user.balance) - totalFee;
+            
+            firebase.database().ref().update(updates)
+                .then(() => {
+                    showAlert('জয়েন করা সফল হয়েছে! 🎉');
+                    showMatchDetails(tournamentId);
+                })
+                .catch(error => showAlert('ত্রুটি হয়েছে: ' + error.message));
+        }
+
+        function deleteTournament(tournamentId) {
+            if (confirm('আপনি কি নিশ্চিত? ম্যাচ ডিলিট হবে!')) {
+                firebase.database().ref('tournaments/' + tournamentId).remove()
+                    .then(() => {
+                        showAlert('ম্যাচ ডিলিট হয়েছে! ✅');
+                        renderAdminMatches();
+                    })
+                    .catch(error => showAlert('ত্রুটি হয়েছে: ' + error.message));
+            }
+        }
+                function renderMyMatches() {
+            const user = state.currentUser;
+            if (!user) {
+                document.getElementById('mymatches').innerHTML = `
+                    <div class="py-40 text-center">
+                        <p class="font-bold uppercase text-lg opacity-60 mb-6 colorful-text">লগইন করুন। 🔐</p>
+                        <button onclick="showPage('login')" class="sunshine-gradient px-12 py-5 rounded-3xl font-bold text-base uppercase text-white">লগইন</button>
+                    </div>
+                `;
+                return;
+            }
+
+            // ইউজারের জয়েন করা ম্যাচ ফিল্টার করা
+            const myMatches = state.tournaments.filter(t => 
+                t.players && t.players.some(p => p.userId === user.id)
+            ).sort((a, b) => b.startTime - a.startTime); 
+
+            const matchesHTML = myMatches.map(t => {
+                const status = getStatus(t.startTime);
+                const categoryColor = t.category === 'SOLO' ? 'solo-bg' : t.category === 'DUO' ? 'duo-bg' : 'squad-bg';
+                
+                // ইউজার ডাটা বের করা
+                const userPlayer = t.players.find(p => p.userId === user.id);
+                
+                return `
+                    <div onclick="showMatchDetails('${t.id}')" class="vibrant-card p-6 rounded-[32px] mb-5 border-l-8 ${status.label === 'End' ? 'border-gray-300 opacity-80' : 'border-orange-400'} cursor-pointer hover:shadow-xl transition-all">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h4 class="font-bold text-lg text-gray-800 line-clamp-1">${t.title}</h4>
+                                <p class="text-[12px] text-gray-500 font-bold mt-1">${formatTime(t.startTime)}</p>
+                            </div>
+                            <span class="text-[10px] font-bold text-white px-3 py-1 rounded-full ${categoryColor}">${t.category}</span>
+                        </div>
+                        
+                        <div class="flex justify-between items-center bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                            <div>
+                                <p class="text-[11px] text-gray-400 font-bold uppercase">Status</p>
+                                <p class="text-[13px] font-bold ${status.color}">${status.label}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[11px] text-gray-400 font-bold uppercase">Paid Fee</p>
+                                <p class="text-[13px] font-bold text-gray-800">৳${userPlayer.fee}</p>
+                            </div>
+                        </div>
+                        
+                        ${status.label === 'End' 
+                            ? '<div class="mt-3 text-center text-[11px] font-bold text-gray-400 uppercase tracking-widest">ম্যাচ শেষ হয়েছে</div>' 
+                            : '<div class="mt-3 text-center text-[11px] font-bold text-blue-500 uppercase tracking-widest">বিস্তারিত দেখুন ➜</div>'
+                        }
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('mymatches').innerHTML = `
+                <div class="space-y-6 pb-20">
+                    <div class="vibrant-card p-6 rounded-[40px] flex items-center gap-4 bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-100">
+                        <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-2xl shadow-sm">🎮</div>
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-800">My Matches</h2>
+                            <p class="text-[12px] text-gray-500 font-bold uppercase tracking-widest">Total Joined: ${myMatches.length}</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        ${matchesHTML || `
+                            <div class="text-center py-20">
+                                <div class="text-6xl mb-4 opacity-20">📭</div>
+                                <p class="text-gray-500 font-bold">আপনি এখনো কোনো ম্যাচে<br>জয়েন করেননি</p>
+                                <button onclick="showPage('home')" class="mt-6 text-orange-500 font-bold underline">ম্যাচ খুঁজুন</button>
+                            </div>
+                        `}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderAdminUsers() {
+            const usersHTML = state.users.map(u => `
+                <div class="vibrant-card p-8 rounded-[40px] flex justify-between items-center hover:shadow-lg">
+                    <div>
+                        <p class="font-bold text-base text-gray-800">${u.name}</p>
+                        <p class="text-[13px] text-gray-600 font-bold uppercase mt-2 tracking-widest">${u.phone} | <span class="text-orange-600 font-bold">৳${Number(u.balance).toFixed(0)}</span></p>
+                    </div>
+                    <button onclick="editUserBalance('${u.id}', '${u.name}')" class="spring-gradient text-white px-7 py-4 rounded-3xl text-[13px] font-bold border-2 border-teal-300 uppercase active:scale-90 shadow-lg">Balance এডিট 💰</button>
+                </div>
+            `).join('');
+            
+            document.getElementById('adminContent').innerHTML = `
+                <div class="space-y-5">
+                    ${usersHTML}
+                </div>
+            `;
+        }
+
+        function editUserBalance(userId, userName) {
+            const user = state.users.find(u => u.id === userId);
+            const newBalance = prompt(`${userName}-এর নতুন Balance দিন (৳):`, user.balance);
+            
+            if (newBalance !== null && !isNaN(newBalance)) {
+                firebase.database().ref('users/' + userId).update({ balance: Number(newBalance) })
+                    .then(() => {
+                        showAlert('সফল হয়েছে! ✅');
+                        renderAdminUsers();
+                    })
+                    .catch(error => showAlert('ত্রুটি হয়েছে: ' + error.message));
+            }
+        }
+
+        function renderContact() {
+            const user = state.currentUser;
+            if (!user) {
+                document.getElementById('contact').innerHTML = `
+                    <div class="py-40 text-center">
+                        <p class="font-bold uppercase text-lg opacity-60 mb-6 colorful-text">লগইন করুন। 🔐</p>
+                        <button onclick="showPage('login')" class="sunshine-gradient px-12 py-5 rounded-3xl font-bold text-base uppercase text-white">লগইন</button>
+                    </div>
+                `;
+                return;
+            }
+
+            const messages = state.messages
+                .filter(m => (m.senderId === user.id && m.receiverId === 'admin-master') || 
+                           (m.senderId === 'admin-master' && m.receiverId === user.id))
+                .sort((a, b) => a.timestamp - b.timestamp);
+            
+            const messagesHTML = messages.map(m => `
+                <div class="flex ${m.senderId === user.id ? 'justify-end' : 'justify-start'}">
+                    <div class="max-w-[85%] px-7 py-5 rounded-[32px] text-[15px] font-bold ${m.senderId === user.id ? 'ocean-gradient text-white rounded-tr-none' : 'bg-gradient-to-r from-purple-50 to-pink-50 text-gray-800 rounded-tl-none border-2 border-purple-200'}">${m.message}</div>
+                </div>
+            `).join('');
+            
+            document.getElementById('contact').innerHTML = `
+                <div class="flex flex-col h-[calc(100vh-250px)] vibrant-card rounded-[48px] overflow-hidden shadow-2xl">
+                    <div class="p-7 bg-gradient-to-r from-blue-50 to-cyan-50 font-bold text-[14px] uppercase text-gray-700 border-b-2 border-blue-200 tracking-widest">সাপোর্ট চ্যাট 💬</div>
+                    <div class="flex-1 overflow-y-auto p-8 space-y-6 scrollbar-hide" id="contactMessages">
+                        ${messagesHTML}
+                    </div>
+                    <form onsubmit="sendContactMessage(event)" class="p-6 bg-gradient-to-r from-blue-50 to-cyan-50 flex gap-5 border-t-2 border-blue-200">
+                        <input id="contactMessage" placeholder="মেসেজ লিখুন... ✏️" class="flex-1 bg-white border-2 border-blue-200 p-6 rounded-3xl text-base font-bold text-gray-800 outline-none focus:border-orange-400" />
+                        <button type="submit" class="sunshine-gradient px-12 rounded-3xl font-bold text-[14px] text-white uppercase shadow-lg active:scale-95">পাঠান ✉️</button>
+                    </form>
+                </div>
+            `;
+            
+            const contactMessages = document.getElementById('contactMessages');
+            contactMessages.scrollTop = contactMessages.scrollHeight;
+        }
+
+        function sendContactMessage(event) {
+            event.preventDefault();
+            const user = state.currentUser;
+            const messageInput = document.getElementById('contactMessage');
+            const message = messageInput.value.trim();
+            
+            if (!message) return;
+            
+            const messageId = firebase.database().ref().child('messages').push().key;
+            const messageData = {
+                id: messageId,
+                senderId: user.id,
+                receiverId: 'admin-master',
+                message: message,
+                timestamp: Date.now()
+            };
+            
+            firebase.database().ref('messages/' + messageId).set(messageData)
+                .then(() => {
+                    messageInput.value = '';
+                    renderContact(); // Refresh chat
+                })
+                .catch(error => showAlert('ত্রুটি হয়েছে: ' + error.message));
+        }
+
+        function logout() {
+            localStorage.removeItem('ff_user');
+            state.currentUser = null;
+            renderHeader();
+            showPage('home');
+            showAlert('লগ আউট সফল! 👋');
+        }
+
+            function viewMatchPlayers(tournamentId) {
+    const t = state.tournaments.find(x => x.id === tournamentId);
+    if (!t) return showAlert('ম্যাচ খুঁজে পাওয়া যায়নি!');
+
+    const playersList = t.players || [];
+
+    const listHTML = playersList.map((p, index) => {
+        // ইউজার ডাটা বের করা
+        const registeredUser = state.users.find(u => u.id === p.userId);
+        const userName = registeredUser ? registeredUser.name : 'Unknown';
+        const userPhone = registeredUser ? registeredUser.phone : 'N/A';
+        const currentBalance = registeredUser ? Number(registeredUser.balance) : 0;
+
+        return `
+            <div class="bg-gradient-to-r from-gray-50 to-white p-4 rounded-[24px] border border-gray-200 mb-3 relative group hover:border-orange-300 transition-all shadow-sm">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] font-bold text-white bg-gray-800 px-2 py-0.5 rounded-full">Slot ${index + 1}</span>
+                        <span class="text-[10px] font-bold text-white ${p.mode === 'SOLO' ? 'bg-blue-400' : p.mode === 'DUO' ? 'bg-orange-400' : 'bg-purple-400'} px-2 py-0.5 rounded-full">${p.mode}</span>
+                    </div>
+                    
+                    <div class="text-right">
+                        <p class="text-[10px] font-bold text-gray-400 uppercase">Fee</p>
+                        <p class="text-[14px] font-bold text-gray-800">৳${p.fee}</p>
+                    </div>
+                </div>
+                
+                <div class="flex justify-between items-center mb-3">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1 cursor-pointer" onclick="copyText('${p.userId}')">
+                            <p class="text-[13px] font-black text-blue-600 font-mono" title="Click to Copy">${p.userId}</p>
+                            <span class="text-[10px] opacity-50">📋</span>
+                        </div>
+                        <p class="text-[14px] font-bold text-gray-800 leading-tight">${userName}</p>
+                        <p class="text-[11px] text-gray-500 font-bold">${userPhone}</p>
+                    </div>
+
+                    <div class="text-right flex flex-col items-end gap-2">
+                        <p class="text-[11px] text-gray-500 font-bold">Bal: <span class="text-orange-600 text-[13px]">৳${currentBalance.toFixed(0)}</span></p>
+                        <button onclick="giveMatchPrize('${p.userId}', ${currentBalance}, '${userName}', '${tournamentId}')" 
+                                class="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-xl text-[11px] font-bold uppercase shadow-md active:scale-95 transition-transform flex items-center gap-1">
+                            <span>🎁 Prize</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="bg-orange-50 p-2.5 rounded-xl border border-orange-100">
+                    <p class="text-[10px] font-bold text-orange-400 uppercase mb-0.5">Game Names:</p>
+                    <p class="text-[12px] font-bold text-gray-700 select-all">${p.names.join(', ')}</p>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    const content = `
+        <div class="max-h-[75vh] overflow-y-auto pr-1 scrollbar-hide">
+            <div class="text-center mb-5 sticky top-0 bg-white/95 backdrop-blur-sm py-4 z-10 border-b-2 border-orange-100">
+                <h3 class="text-lg font-bold text-gray-800 mb-1">${t.title}</h3>
+                <p class="text-[11px] text-gray-500 font-bold">প্রাইজ দিতে 🎁 বাটনে ক্লিক করুন</p>
+            </div>
+            
+            <div class="space-y-2 pb-5">
+                ${listHTML || '<div class="text-center py-10 opacity-50 font-bold">কোনো প্লেয়ার নেই</div>'}
+            </div>
+            
+            <button onclick="hideModal()" class="w-full bg-gray-800 text-white py-4 rounded-2xl font-bold uppercase text-xs tracking-widest mt-2 sticky bottom-0 shadow-xl">Close List</button>
+        </div>
+    `;
+
+    document.getElementById('modalContent').innerHTML = content;
+    document.getElementById('modal').classList.remove('hidden');
+    document.getElementById('modal').classList.add('flex');
+    
+    // Default modal close button hide logic
+    const defaultModalBtn = document.querySelector('#modal button[onclick="hideModal()"]');
+    if(defaultModalBtn && defaultModalBtn.parentElement === document.querySelector('.vibrant-card')) {
+       defaultModalBtn.style.display = 'none';
+    }
+}
+function giveMatchPrize(userId, currentBalance, userName, tournamentId) {
+    // ১. প্রম্পট করে এমাউন্ট নেওয়া
+    const prizeStr = prompt(`${userName}-কে কত টাকা পুরস্কার দিতে চান? (বর্তমান: ৳${currentBalance})`);
+    
+    if (!prizeStr) return; // যদি ক্যানসেল করে
+
+    const prizeAmount = Number(prizeStr);
+
+    // ২. ভ্যালিডেশন
+    if (isNaN(prizeAmount) || prizeAmount <= 0) {
+        return showAlert('দয়া করে সঠিক টাকার পরিমাণ লিখুন! ❌');
+    }
+
+    const newBalance = Number(currentBalance) + prizeAmount;
+
+    // ৩. কনফার্মেশন (ঐচ্ছিক, তবে সেফটি ভালো)
+    if (!confirm(`${userName}-এর ব্যালেন্সে ৳${prizeAmount} যোগ করা হবে?\nনতুন ব্যালেন্স হবে: ৳${newBalance}`)) {
+        return;
+    }
+
+    // ৪. ফায়ারবেস আপডেট
+    firebase.database().ref('users/' + userId).update({ balance: newBalance })
+        .then(() => {
+            showAlert(`সফলভাবে ৳${prizeAmount} পাঠানো হয়েছে! ✅`);
+            // লিস্ট রিফ্রেশ করা যাতে আপডেটেড ব্যালেন্স দেখা যায়
+            viewMatchPlayers(tournamentId);
+        })
+        .catch(error => {
+            showAlert('ত্রুটি হয়েছে: ' + error.message);
+        });
+}
+
+   function renderAdminSettings() {
+    const s = state.settings;
+    document.getElementById('adminContent').innerHTML = `
+        <div class="vibrant-card p-10 rounded-[48px] space-y-8">
+            <h4 class="font-bold text-[15px] text-orange-600 uppercase tracking-widest border-b-2 border-orange-100 pb-4">নোটিশ বোর্ড সেটআপ 📢</h4>
+            
+            <div class="space-y-3">
+                <label class="text-[13px] text-gray-600 font-bold ml-2">Marquee নোটিশ (স্ক্রল টেক্সট)</label>
+                <textarea id="setNotice" rows="2" class="w-full bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 p-6 rounded-3xl text-base font-bold text-gray-800 outline-none focus:border-orange-400">${s.marqueeNotice}</textarea>
+            </div>
+
+            <h4 class="font-bold text-[15px] text-red-500 uppercase tracking-widest border-b-2 border-red-100 pb-4 pt-4">গেম রুলস সেটআপ 📜</h4>
+            <div class="space-y-3">
+                <label class="text-[13px] text-gray-600 font-bold ml-2">Rules (প্রতি লাইনে একটি রুল লিখুন)</label>
+                <textarea id="setGameRules" rows="6" placeholder="১. হ্যাক ব্যবহার করা নিষেধ..." class="w-full bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 p-6 rounded-3xl text-base font-bold text-gray-800 outline-none focus:border-orange-400">${s.gameRules || ''}</textarea>
+            </div>
+            <h4 class="font-bold text-[15px] text-purple-600 uppercase tracking-widest border-b-2 border-purple-100 pb-4 pt-4">পেমেন্ট নাম্বার সেটআপ 💰</h4>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-3">
+                    <label class="text-[13px] text-gray-600 font-bold ml-2">অ্যাডমিন বিকাশ নাম্বার</label>
+                    <input type="text" id="setBkash" value="${s.adminBkash}" class="w-full bg-gradient-to-r from-pink-50 to-red-50 border-2 border-pink-200 p-6 rounded-3xl text-base font-bold text-gray-800 outline-none focus:border-orange-400" />
+                </div>
+                <div class="space-y-3">
+                    <label class="text-[13px] text-gray-600 font-bold ml-2">অ্যাডমিন নগদ নাম্বার</label>
+                    <input type="text" id="setNagad" value="${s.adminNagad}" class="w-full bg-gradient-to-r from-orange-50 to-yellow-50 border-2 border-orange-200 p-6 rounded-3xl text-base font-bold text-gray-800 outline-none focus:border-orange-400" />
+                </div>
+            </div>
+
+            <h4 class="font-bold text-[15px] text-blue-600 uppercase tracking-widest border-b-2 border-blue-100 pb-4 pt-4">লিমিট সেটআপ ⚠️</h4>
+
+            <div class="grid grid-cols-2 gap-6">
+                <div class="space-y-3">
+                    <label class="text-[13px] text-gray-600 font-bold ml-2">সর্বনিম্ন ডিপোজিট</label>
+                    <input type="number" id="setMinDep" value="${s.minDeposit}" class="w-full bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 p-6 rounded-3xl text-base font-bold text-gray-800 outline-none focus:border-orange-400" />
+                </div>
+                <div class="space-y-3">
+                    <label class="text-[13px] text-gray-600 font-bold ml-2">সর্বনিম্ন উইথড্র</label>
+                    <input type="number" id="setMinWith" value="${s.minWithdraw}" class="w-full bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 p-6 rounded-3xl text-base font-bold text-gray-800 outline-none focus:border-orange-400" />
+                </div>
+            </div>
+
+            <button onclick="saveSettings()" class="w-full sunshine-gradient py-7 rounded-[32px] font-bold text-[15px] uppercase text-white shadow-2xl active:scale-95 transition-transform mt-4">Save Settings ⚙️</button>
+        </div>
+    `;
+}
+
+        function saveSettings() {
+    const notice = document.getElementById('setNotice').value;
+    const gameRules = document.getElementById('setGameRules').value; // রুলস ভ্যালু নেওয়া
+    const bkash = document.getElementById('setBkash').value;
+    const nagad = document.getElementById('setNagad').value;
+    const minDep = Number(document.getElementById('setMinDep').value);
+    const minWith = Number(document.getElementById('setMinWith').value);
+
+    if(!notice || !bkash || !nagad) return showAlert('সব তথ্য পূরণ করুন! ⚠️');
+
+    const settingsData = {
+        marqueeNotice: notice,
+        gameRules: gameRules, // রুলস ডাটাবেসে যাবে
+        adminBkash: bkash,
+        adminNagad: nagad,
+        minDeposit: minDep,
+        minWithdraw: minWith
+    };
+
+    firebase.database().ref('settings').update(settingsData)
+        .then(() => {
+            showAlert('সেটিংস আপডেট হয়েছে! ✅');
+            state.settings = settingsData;
+            renderMarquee();
+        })
+        .catch(error => showAlert('ত্রুটি হয়েছে: ' + error.message));
+}
+
+        // ১. সব ইউজারের মেসেজ লিস্ট দেখার ফাংশন
+        function renderAdminSupport() {
+            // মেসেজ থেকে ইউনিক ইউজার খুঁজে বের করা
+            const conversations = {};
+            
+            state.messages.forEach(m => {
+                let otherId = null;
+                // যদি মেসেজ অ্যাডমিন পাঠায় বা অ্যাডমিন পায়
+                if (m.senderId === 'admin-master') otherId = m.receiverId;
+                else if (m.receiverId === 'admin-master') otherId = m.senderId;
+                
+                if (otherId) {
+                    const otherUser = state.users.find(u => u.id === otherId);
+                    // লিস্টে না থাকলে নতুন এড করা
+                    if (!conversations[otherId]) {
+                        conversations[otherId] = {
+                            userId: otherId,
+                            name: otherUser ? otherUser.name : 'অজানা ইউজার',
+                            lastMsg: m.message,
+                            timestamp: m.timestamp
+                        };
+                    } else {
+                        // লেটেস্ট মেসেজ আপডেট করা
+                        if (m.timestamp > conversations[otherId].timestamp) {
+                            conversations[otherId].lastMsg = m.message;
+                            conversations[otherId].timestamp = m.timestamp;
+                        }
+                    }
+                }
+            });
+
+            // সময় অনুযায়ী সর্ট করা (নতুন মেসেজ আগে)
+            const sortedList = Object.values(conversations).sort((a, b) => b.timestamp - a.timestamp);
+
+            const listHTML = sortedList.map(c => `
+                <div onclick="openAdminChat('${c.userId}')" class="vibrant-card p-6 rounded-[32px] flex justify-between items-center hover:shadow-lg cursor-pointer mb-4 active:scale-[0.98] transition-transform">
+                    <div class="flex-1 min-w-0 pr-4">
+                        <div class="flex justify-between items-center mb-1">
+                            <h4 class="font-bold text-gray-800 text-[15px] truncate">${c.name}</h4>
+                            <span class="text-[11px] font-bold text-gray-500">${formatTime(c.timestamp)}</span>
+                        </div>
+                        <p class="text-sm text-gray-600 truncate font-medium">${c.lastMsg}</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold shadow-sm">➜</div>
+                </div>
+            `).join('');
+
+            document.getElementById('adminContent').innerHTML = `
+                <div class="pb-10">
+                    <h3 class="text-[15px] font-bold text-gray-700 uppercase tracking-widest mb-6 flex items-center gap-2">
+                        <span>ইনবক্স (${sortedList.length}) 📥</span>
+                    </h3>
+                    ${listHTML || '<div class="text-center py-20 opacity-50 font-bold">কোনো মেসেজ নেই</div>'}
+                </div>
+            `;
+        }
+
+        // ২. নির্দিষ্ট ইউজারের চ্যাট ওপেন করার ফাংশন
+        function openAdminChat(userId) {
+            const user = state.users.find(u => u.id === userId);
+            const userName = user ? user.name : 'Unknown User';
+
+            const messages = state.messages
+                .filter(m => (m.senderId === 'admin-master' && m.receiverId === userId) || 
+                           (m.senderId === userId && m.receiverId === 'admin-master'))
+                .sort((a, b) => a.timestamp - b.timestamp);
+
+            const messagesHTML = messages.map(m => {
+                const isAdmin = m.senderId === 'admin-master';
+                return `
+                    <div class="flex ${isAdmin ? 'justify-end' : 'justify-start'} mb-3">
+                        <div class="max-w-[85%] px-5 py-3 rounded-[24px] text-[14px] font-bold shadow-sm ${isAdmin ? 'ocean-gradient text-white rounded-tr-none' : 'bg-white border-2 border-gray-100 text-gray-800 rounded-tl-none'}">
+                            ${m.message}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('adminContent').innerHTML = `
+                <div class="flex flex-col h-[600px] vibrant-card rounded-[40px] overflow-hidden shadow-2xl">
+                    <div class="p-5 bg-gradient-to-r from-blue-50 to-cyan-50 border-b-2 border-blue-100 flex items-center gap-4">
+                        <button onclick="renderAdminSupport()" class="w-10 h-10 rounded-full bg-white border-2 border-blue-200 flex items-center justify-center text-blue-600 font-bold hover:bg-blue-50 transition-colors">←</button>
+                        <div>
+                            <h4 class="font-bold text-gray-800">${userName}</h4>
+                            <p class="text-[11px] text-gray-500 font-bold uppercase tracking-widest">${user ? user.phone : userId}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 overflow-y-auto p-6 bg-gray-50/50" id="adminChatArea">
+                        ${messagesHTML}
+                    </div>
+
+                    <form onsubmit="sendAdminReply(event, '${userId}')" class="p-4 bg-white border-t-2 border-gray-100 flex gap-3">
+                        <input id="adminReplyInput" placeholder="Reply লিখুন..." class="flex-1 bg-gray-50 border-2 border-gray-200 px-5 py-3 rounded-3xl text-[14px] font-bold outline-none focus:border-blue-400 transition-colors" autocomplete="off" />
+                        <button type="submit" class="sunshine-gradient w-12 h-12 rounded-full flex items-center justify-center text-xl text-white shadow-lg active:scale-95 transition-transform">➤</button>
+                    </form>
+                </div>
+            `;
+
+            // চ্যাট এরিয়া স্ক্রল করে নিচে নিয়ে যাওয়া
+            setTimeout(() => {
+                const chatArea = document.getElementById('adminChatArea');
+                if(chatArea) chatArea.scrollTop = chatArea.scrollHeight;
+            }, 100);
+        }
+
+        // ৩. রিপ্লাই পাঠানোর ফাংশন
+        function sendAdminReply(event, targetUserId) {
+            event.preventDefault();
+            const input = document.getElementById('adminReplyInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const messageId = firebase.database().ref().child('messages').push().key;
+            const messageData = {
+                id: messageId,
+                senderId: 'admin-master', // অ্যাডমিন আইডি
+                receiverId: targetUserId,
+                message: text,
+                timestamp: Date.now()
+            };
+
+            firebase.database().ref('messages/' + messageId).set(messageData)
+                .then(() => {
+                    input.value = '';
+                    openAdminChat(targetUserId); // চ্যাট রিফ্রেশ
+                })
+                .catch(err => showAlert('এরর: ' + err.message));
+        }
+
+        // Initialize Firebase listeners
+        function initFirebaseListeners() {
+            firebase.database().ref().on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    state.users = data.users ? Object.values(data.users) : [];
+                    state.tournaments = data.tournaments ? Object.values(data.tournaments) : [];
+                    state.payments = data.payments ? Object.values(data.payments) : [];
+                    state.settings = data.settings || state.settings;
+                    state.messages = data.messages ? Object.values(data.messages) : [];
+                    
+                    if (state.currentUser) {
+                        const updatedUser = state.users.find(u => u.id === state.currentUser.id);
+                        if (updatedUser) {
+                            state.currentUser = updatedUser;
+                            localStorage.setItem('ff_user', JSON.stringify(updatedUser));
+                        }
+                    }
+                    
+                    renderHeader();
+                    renderMarquee();
+                    
+                    const activePage = document.querySelector('.page.active');
+                    if (activePage) {
+                        renderPage(activePage.id);
+                    }
+                }
+            });
+        }
+
+        // Initialize app
+        function initApp() {
+            initFirebaseListeners();
+            renderHeader();
+            renderMarquee();
+            showPage('home');
+            
+            setTimeout(() => {
+                document.getElementById('loading').style.display = 'none';
+            }, 1000);
+        }
+
+        // Start the app when page loads
+        window.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
